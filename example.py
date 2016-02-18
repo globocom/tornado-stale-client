@@ -16,6 +16,13 @@ def main():
     cache = StrictRedis()
     client = StaleHTTPClient(cache=cache)
 
+    # First
+    response = yield client.fetch('http://www.globo.com')
+    print(
+        response.code, 'GET',
+        response.effective_url, response.body[:50], '...')
+
+    # Cached
     response = yield client.fetch('http://www.globo.com')
     print(
         response.code, 'GET',

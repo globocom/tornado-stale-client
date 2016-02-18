@@ -29,7 +29,7 @@ class StaleHTTPClient(object):
         self.primary_key_prefix = primary_key_prefix
         self.stale_key_prefix = stale_key_prefix
         self.ttl = ttl
-        self.vary = vary
+        self.vary = vary or ()
 
     @gen.coroutine
     def fetch(self, request, **kwargs):

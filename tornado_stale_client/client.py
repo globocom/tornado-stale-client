@@ -18,23 +18,21 @@ from tornado import gen
 from tornado.httpclient import HTTPRequest, HTTPResponse
 
 
-
 class StaleHTTPClient(object):
 
     def __init__(self, cache=None, client=None,
                  primary_key_prefix='primary_http',
                  stale_key_prefix='stale_http',
-                 ttl=5, vary=None):
+                 ttl=5):
 
         self.cache = cache or StrictRedis()
         self.client = client or tornado.httpclient.AsyncHTTPClient()
         self.primary_key_prefix = primary_key_prefix
         self.stale_key_prefix = stale_key_prefix
         self.ttl = ttl
-        self.vary = vary or ()
 
     @gen.coroutine
-    def fetch(self, request, **kwargs):
+    def fetch(self, request, vary=None, **kwargs):
         should_raise_error = kwargs.pop('raise_error', True)
 
         # Convert to HTTPRequest if fetching a URL
@@ -42,7 +40,7 @@ class StaleHTTPClient(object):
             request = HTTPRequest(url=request, **kwargs)
 
         # Try the primary cache
-        cached_response = self.get_primary_cache(request)
+        cached_response = self.get_primary_cache(request, vary=vary)
         if cached_response is not None:
             raise gen.Return(cached_response)
 
@@ -52,11 +50,11 @@ class StaleHTTPClient(object):
 
         # Set cache and return on success
         if real_response.error is None:
-            self.set_cache(request, real_response)
+            self.set_cache(request, vary, real_response)
             raise gen.Return(real_response)
 
         # Response failed, try the stale cache
-        stale_response = self.get_stale_cache(request)
+        stale_response = self.get_stale_cache(request, vary=vary)
         if stale_response is not None:
             raise gen.Return(stale_response)
 
@@ -66,16 +64,17 @@ class StaleHTTPClient(object):
 
         raise gen.Return(real_response)
 
-    def get_key(self, request):
+    def get_key(self, request, vary):
+        vary = vary or []
         vary_headers = {
-            k.lower(): v for k, v in request.headers.items() if k in self.vary}
+            k.lower(): v for k, v in request.headers.items() if k in vary}
         return request.url + "#" + urlencode(vary_headers)
 
-    def get_primary_key(self, request):
-        return '%s:%s' % (self.primary_key_prefix, self.get_key(request))
+    def get_primary_key(self, request, vary):
+        return '%s:%s' % (self.primary_key_prefix, self.get_key(request, vary))
 
-    def get_stale_key(self, request):
-        return '%s:%s' % (self.stale_key_prefix, self.get_key(request))
+    def get_stale_key(self, request, vary):
+        return '%s:%s' % (self.stale_key_prefix, self.get_key(request, vary))
 
     def get_cache(self, request, key):
         raw_data = self.cache.get(key)
@@ -85,17 +84,17 @@ class StaleHTTPClient(object):
         response = self.deserialize_response(request, raw_data)
         return response
 
-    def get_primary_cache(self, request):
-        key = self.get_primary_key(request)
+    def get_primary_cache(self, request, vary):
+        key = self.get_primary_key(request, vary)
         return self.get_cache(request, key)
 
-    def get_stale_cache(self, request):
-        key = self.get_stale_key(request)
+    def get_stale_cache(self, request, vary):
+        key = self.get_stale_key(request, vary)
         return self.get_cache(request, key)
 
-    def set_cache(self, request, response):
-        primary_key = self.get_primary_key(request)
-        stale_key = self.get_stale_key(request)
+    def set_cache(self, request, vary, response):
+        primary_key = self.get_primary_key(request, vary)
+        stale_key = self.get_stale_key(request, vary)
 
         logging.debug('Caching response: %s', request.url)
 

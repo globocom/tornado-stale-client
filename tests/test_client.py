@@ -154,19 +154,14 @@ class StaleHTTPClientTestCase(AsyncTestCase):
         xml_response = self.fake_client.add_response(body=b'<xml />')
 
         client = StaleHTTPClient(
-            cache=self.cache, client=self.fake_client, ttl=1,
-            vary=['Accept'])
+            cache=self.cache, client=self.fake_client, ttl=1)
 
-        # Populate cache
-        yield [
-            client.fetch('/url', headers={'Accept': 'application/json'}),
-            client.fetch('/url', headers={'Accept': 'text/xml'})
-        ]
-        # Read from cache
-        first_response, second_response = yield [
-            client.fetch('/url', headers={'Accept': 'application/json'}),
-            client.fetch('/url', headers={'Accept': 'text/xml'})
-        ]
+        # Populate and read from cache
+        for i in range(2):
+            first_response, second_response = yield [
+                client.fetch('/url', headers={'Accept': 'application/json'}, vary=['Accept']),
+                client.fetch('/url', headers={'Accept': 'text/xml'}, vary=['Accept'])
+            ]
 
         self.assertIsNot(first_response, json_response)
         self.assertIsNot(second_response, xml_response)

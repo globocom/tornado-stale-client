@@ -16,6 +16,7 @@ import tornado
 from redis import StrictRedis
 from tornado import gen
 from tornado.httpclient import HTTPRequest, HTTPResponse
+from tornado.httputil import HTTPHeaders
 
 
 class StaleHTTPClient(object):
@@ -118,7 +119,7 @@ class StaleHTTPClient(object):
         buffer = BytesIO(bytes(data['body'], 'utf-8'))
         return HTTPResponse(
             request=request,
-            headers=data['headers'],
+            headers=HTTPHeaders(data['headers']),
             code=data['code'],
             buffer=buffer,
         )

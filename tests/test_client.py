@@ -13,6 +13,7 @@ from io import BytesIO
 from redis import StrictRedis
 from tornado import gen
 from tornado.httpclient import HTTPRequest, HTTPResponse, HTTPError
+from tornado.httputil import HTTPHeaders
 from tornado.testing import AsyncTestCase, gen_test
 
 from tornado_stale_client import StaleHTTPClient
@@ -32,7 +33,7 @@ class FakeClient(object):
         buffer = BytesIO(body)
         response = HTTPResponse(
             request=request,
-            headers=headers or {},
+            headers=HTTPHeaders(headers or {}),
             code=code,
             buffer=buffer,
         )
@@ -173,3 +174,4 @@ class StaleHTTPClientTestCase(AsyncTestCase):
         self.assertEqual(response.body, expected_response.body)
         self.assertEqual(response.code, expected_response.code)
         self.assertEqual(response.headers, expected_response.headers)
+        self.assertIsInstance(response.headers, HTTPHeaders)

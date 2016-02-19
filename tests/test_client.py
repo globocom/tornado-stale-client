@@ -30,10 +30,11 @@ class FakeClient(object):
 
     def add_response(self, headers=None, code=200, body=b'fake'):
         request = HTTPRequest('/fake')
+        headers = HTTPHeaders(headers or {})
         buffer = BytesIO(body)
         response = HTTPResponse(
             request=request,
-            headers=HTTPHeaders(headers or {}),
+            headers=headers,
             code=code,
             buffer=buffer,
         )
@@ -174,4 +175,8 @@ class StaleHTTPClientTestCase(AsyncTestCase):
         self.assertEqual(response.body, expected_response.body)
         self.assertEqual(response.code, expected_response.code)
         self.assertEqual(response.headers, expected_response.headers)
+
         self.assertIsInstance(response.headers, HTTPHeaders)
+
+        self.assertIsInstance(response.request, HTTPRequest)
+        self.assertIsInstance(response.request.headers, HTTPHeaders)

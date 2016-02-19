@@ -117,6 +117,7 @@ class StaleHTTPClient(object):
     def deserialize_response(self, request, raw_data):
         data = json.loads(raw_data.decode())
         buffer = BytesIO(bytes(data['body'], 'utf-8'))
+        request.headers = HTTPHeaders(request.headers)
         return HTTPResponse(
             request=request,
             headers=HTTPHeaders(data['headers']),

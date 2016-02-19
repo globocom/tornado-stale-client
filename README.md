@@ -21,6 +21,20 @@ def main():
 Check `example.py` for a runnable demo.
 
 
+# Options
+
+The client accepts the following options:
+
+| Option               | Description                                                     | Default                              |
+| -------------------- | --------------------------------------------------------------- | ------------------------------------ |
+| cache                | `StrictRedis` instance or compatible                            | `redis.StrictRedis`                  |
+| client               | Accepts any compatible tornado async http client                | `tornado.httpclient.AsyncHTTPClient` |
+| primary_key_prefix   | Prefix to use for the primary cache                             | "primary_http"                       |
+| stale_key_prefix     | Prefix to use for the stale cache                               | "stale_http"                         |
+| ttl                  | `float`, time in seconds to keep the request in the stale cache | 5.0                                  |
+| vary                 | list of headers in which the cache should vary                  | None                                 |
+
+
 # Installing
 
 ```

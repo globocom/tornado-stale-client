@@ -1,3 +1,5 @@
+BUMP := 'patch'
+
 setup:
 	@pip install -U -r requirements.txt
 
@@ -8,3 +10,23 @@ test:
 
 coverage:
 	@coverage html -i
+
+patch:
+	@$(eval BUMP := 'patch')
+
+minor:
+	@$(eval BUMP := 'minor')
+
+major:
+	@$(eval BUMP := 'major')
+
+bump:
+	@bumpversion ${BUMP}
+
+release:
+	@python setup.py -q sdist upload
+	@git push
+	@git push --tags
+
+register:
+	@python setup.py register

@@ -101,7 +101,7 @@ class StaleHTTPClient(object):
 
         with self.cache.pipeline() as pipe:
             microseconds = int(self.ttl * 1000)
-            pipe.psetex(primary_key, microseconds, serialized_response)
+            pipe.set(primary_key, serialized_response, px=microseconds)
             pipe.set(stale_key, serialized_response)
             pipe.execute()
 

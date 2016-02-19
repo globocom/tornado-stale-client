@@ -13,18 +13,20 @@ from io import BytesIO
 from urllib.parse import urlencode
 
 import tornado
+from redis import StrictRedis
 from tornado import gen
 from tornado.httpclient import HTTPRequest, HTTPResponse
 
 
+
 class StaleHTTPClient(object):
 
-    def __init__(self, cache, client=None,
+    def __init__(self, cache=None, client=None,
                  primary_key_prefix='primary_http',
                  stale_key_prefix='stale_http',
                  ttl=5, vary=None):
 
-        self.cache = cache
+        self.cache = cache or StrictRedis()
         self.client = client or tornado.httpclient.AsyncHTTPClient()
         self.primary_key_prefix = primary_key_prefix
         self.stale_key_prefix = stale_key_prefix

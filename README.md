@@ -52,7 +52,7 @@ make test
 
 # Releasing
 
-1. Bump to a `patch`, `minor` or `major` version.
+* Bump to a `patch`, `minor` or `major` version.
 
 ```
 # By default bumps to a patch version
@@ -64,7 +64,7 @@ make minor bump
 make major bump
 ```
 
-2. Upload release to PyPI
+* Upload release to PyPI
 
 The name of the server on `.pypirc` will be asked.
 

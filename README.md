@@ -18,7 +18,7 @@ def main():
     print(response.code, 'GET', url, response.body)
 ```
 
-Check `example.py` for a runnable demo.
+Check [example.py](example.py) for a runnable demo.
 
 
 # Options

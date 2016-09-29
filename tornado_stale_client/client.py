@@ -41,7 +41,7 @@ class StaleHTTPClient(object):
             request = HTTPRequest(url=request, **kwargs)
 
         # Try the primary cache
-        cached_response = self.get_primary_cache(request, vary=vary)
+        cached_response = yield self.get_primary_cache(request, vary=vary)
         if cached_response is not None:
             raise gen.Return(cached_response)
 
@@ -51,11 +51,11 @@ class StaleHTTPClient(object):
 
         # Set cache and return on success
         if real_response.error is None:
-            self.set_cache(request, vary, real_response)
+            yield self.set_cache(request, vary, real_response)
             raise gen.Return(real_response)
 
         # Response failed, try the stale cache
-        stale_response = self.get_stale_cache(request, vary=vary)
+        stale_response = yield self.get_stale_cache(request, vary=vary)
         if stale_response is not None:
             raise gen.Return(stale_response)
 
@@ -77,22 +77,28 @@ class StaleHTTPClient(object):
     def get_stale_key(self, request, vary):
         return '%s:%s' % (self.stale_key_prefix, self.get_key(request, vary))
 
+    @gen.coroutine
     def get_cache(self, request, key):
-        raw_data = self.cache.get(key)
+        raw_data = yield self.cache.get(key)
         if raw_data is None:
             return None
         logging.debug('Loaded cache: %s', key)
         response = self.deserialize_response(request, raw_data)
         return response
 
+    @gen.coroutine
     def get_primary_cache(self, request, vary):
         key = self.get_primary_key(request, vary)
-        return self.get_cache(request, key)
+        result = yield self.get_cache(request, key)
+        return result
 
+    @gen.coroutine
     def get_stale_cache(self, request, vary):
         key = self.get_stale_key(request, vary)
-        return self.get_cache(request, key)
+        result = yield self.get_cache(request, key)
+        return result
 
+    @gen.coroutine
     def set_cache(self, request, vary, response):
         primary_key = self.get_primary_key(request, vary)
         stale_key = self.get_stale_key(request, vary)
@@ -101,7 +107,8 @@ class StaleHTTPClient(object):
 
         serialized_response = self.serialize_response(request, response)
 
-        with self.cache.pipeline() as pipe:
+        pipe = yield self.cache.pipeline()
+        with pipe:
             microseconds = int(self.ttl * 1000)
             pipe.set(primary_key, serialized_response, px=microseconds)
             pipe.set(stale_key, serialized_response)

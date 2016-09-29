@@ -7,14 +7,14 @@
 # http://www.opensource.org/licenses/MIT-license
 # Copyright (c) 2016, Globo.com <backstage@corp.globo.com>
 
-import time
 from io import BytesIO
 
-from redis import StrictRedis
+import tornado.web
 from tornado import gen
 from tornado.httpclient import HTTPRequest, HTTPResponse, HTTPError
 from tornado.httputil import HTTPHeaders
-from tornado.testing import AsyncTestCase, gen_test
+from tornado.testing import AsyncHTTPTestCase, gen_test
+from smart_sentinel.tornado_client import TornadoStrictRedis
 
 from tornado_stale_client import StaleHTTPClient
 
@@ -42,13 +42,16 @@ class FakeClient(object):
         return response
 
 
-class StaleHTTPClientTestCase(AsyncTestCase):
-
+class StaleHTTPClientTestCase(AsyncHTTPTestCase):
+    @gen.coroutine
     def setUp(self):
         super(StaleHTTPClientTestCase, self).setUp()
         self.fake_client = FakeClient()
-        self.cache = StrictRedis()
-        self.cache.flushall()
+        self.cache = TornadoStrictRedis()
+        yield self.cache.flushall()
+
+    def get_app(self):
+        return tornado.web.Application([])
 
     @gen_test
     def test_returns_response(self):
@@ -101,7 +104,7 @@ class StaleHTTPClientTestCase(AsyncTestCase):
             cache=self.cache, client=self.fake_client, ttl=0.001)
 
         yield client.fetch('/url')
-        time.sleep(0.002)
+        yield tornado.gen.sleep(0.002)
         stale_response = yield client.fetch('/url')
 
         self.assertIsNot(stale_response, error_response)

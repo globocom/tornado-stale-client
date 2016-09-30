@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='tornado-stale-client',
-    version='0.1.0',
+    version='0.1.1',
     description='An async http client for tornado with stale cache support',
     long_description='',
     keywords='tornado async http client redis stale cache',

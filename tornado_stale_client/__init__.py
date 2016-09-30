@@ -9,4 +9,4 @@
 
 from tornado_stale_client.client import StaleHTTPClient  # NOQA
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'

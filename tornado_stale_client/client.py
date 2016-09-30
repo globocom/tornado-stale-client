@@ -24,13 +24,14 @@ class StaleHTTPClient(object):
     def __init__(self, cache=None, client=None,
                  primary_key_prefix='primary_http',
                  stale_key_prefix='stale_http',
-                 ttl=5):
+                 ttl=5, stale_ttl=None):
 
         self.cache = cache or StrictRedis()
         self.client = client or tornado.httpclient.AsyncHTTPClient()
         self.primary_key_prefix = primary_key_prefix
         self.stale_key_prefix = stale_key_prefix
         self.ttl = ttl
+        self.stale_ttl = stale_ttl
 
     @gen.coroutine
     def fetch(self, request, vary=None, **kwargs):
@@ -111,7 +112,8 @@ class StaleHTTPClient(object):
         with pipe:
             microseconds = int(self.ttl * 1000)
             pipe.set(primary_key, serialized_response, px=microseconds)
-            pipe.set(stale_key, serialized_response)
+            microseconds = self.stale_ttl and int(self.stale_ttl * 1000)
+            pipe.set(stale_key, serialized_response, px=microseconds)
             pipe.execute()
 
     def serialize_response(self, request, response):
@@ -131,5 +133,3 @@ class StaleHTTPClient(object):
             code=data['code'],
             buffer=buffer,
         )
-
-

@@ -58,7 +58,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
         fake_response = self.fake_client.add_response(
             code=200, body=b'fake response', headers={'fake': 'header'})
 
-        client = StaleHTTPClient(cache=self.cache, client=self.fake_client)
+        client = StaleHTTPClient(client=self.fake_client)
 
         response = yield client.fetch('/url')
 
@@ -68,7 +68,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
     def test_accepts_request_object(self):
         fake_response = self.fake_client.add_response()
 
-        client = StaleHTTPClient(cache=self.cache, client=self.fake_client)
+        client = StaleHTTPClient(client=self.fake_client)
 
         request = HTTPRequest('/url')
         response = yield client.fetch(request)
@@ -79,7 +79,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
     def test_returns_real_response(self):
         expected_response = self.fake_client.add_response()
 
-        client = StaleHTTPClient(cache=self.cache, client=self.fake_client)
+        client = StaleHTTPClient(client=self.fake_client)
         response = yield client.fetch('/url')
 
         self.assertIs(response, expected_response)
@@ -88,7 +88,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
     def test_returns_response_from_primary_cache(self):
         response = self.fake_client.add_response()
 
-        client = StaleHTTPClient(cache=self.cache, client=self.fake_client)
+        client = StaleHTTPClient(client=self.fake_client)
         response = yield client.fetch('/url')
         cached_response = yield client.fetch('/url')
 
@@ -100,8 +100,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
         expected_response = self.fake_client.add_response(body=b'stale')
         error_response = self.fake_client.add_response(body=b'error', code=500)
 
-        client = StaleHTTPClient(
-            cache=self.cache, client=self.fake_client, ttl=0.001)
+        client = StaleHTTPClient(client=self.fake_client, ttl=0.001)
 
         yield client.fetch('/url')
         yield tornado.gen.sleep(0.002)
@@ -115,8 +114,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
         stale_response = self.fake_client.add_response(body=b'stale')
         error_response = self.fake_client.add_response(body=b'error', code=500)
 
-        client = StaleHTTPClient(
-            cache=self.cache, client=self.fake_client, ttl=0.001, stale_ttl=0.002)
+        client = StaleHTTPClient(client=self.fake_client, ttl=0.001, stale_ttl=0.002)
 
         yield client.fetch('/url')
         current_response = yield client.fetch('/url')
@@ -132,8 +130,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
     def test_raises_error_after_error_with_empty_cache(self):
         self.fake_client.add_response(body=b'error', code=500)
 
-        client = StaleHTTPClient(
-            cache=self.cache, client=self.fake_client, ttl=None)
+        client = StaleHTTPClient(client=self.fake_client, ttl=None)
 
         with self.assertRaises(HTTPError):
             yield client.fetch('/url')
@@ -143,8 +140,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
         expected_response = self.fake_client.add_response(
             body=b'error', code=500)
 
-        client = StaleHTTPClient(
-            cache=self.cache, client=self.fake_client, ttl=None)
+        client = StaleHTTPClient(client=self.fake_client, ttl=None)
 
         response = yield client.fetch('/url', raise_error=False)
 
@@ -155,8 +151,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
         first_expected = self.fake_client.add_response()
         second_expected = self.fake_client.add_response()
 
-        client = StaleHTTPClient(
-            cache=self.cache, client=self.fake_client, ttl=1)
+        client = StaleHTTPClient(client=self.fake_client, ttl=1)
 
         # Populate cache
         yield [client.fetch('/first'), client.fetch('/second')]
@@ -176,8 +171,7 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
         json_response = self.fake_client.add_response(body=b'{}')
         xml_response = self.fake_client.add_response(body=b'<xml />')
 
-        client = StaleHTTPClient(
-            cache=self.cache, client=self.fake_client, ttl=1)
+        client = StaleHTTPClient(client=self.fake_client, ttl=1)
 
         # Populate and read from cache
         for i in range(2):

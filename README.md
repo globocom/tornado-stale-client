@@ -6,12 +6,12 @@ An async http client for tornado with stale cache support.
 # Using
 
 ```python
-from redis import StrictRedis
+from smart_sentinel.tornado_client import TornadoStrictRedis
 from tornado_stale_client import StaleHTTPClient
 
 @gen.coroutine
 def main():
-    cache = StrictRedis()
+    cache = TornadoStrictRedis()
     client = StaleHTTPClient(cache=cache)
 
     response = yield client.fetch('http://...')
@@ -25,14 +25,14 @@ Check [example.py](example.py) for a runnable demo.
 
 The client accepts the following options:
 
-| Option               | Description                                                        | Default                              |
-| -------------------- | ------------------------------------------------------------------ | ------------------------------------ |
-| cache                | `StrictRedis` instance or compatible                               | `redis.StrictRedis`                  |
-| client               | Accepts any compatible tornado async http client                   | `tornado.httpclient.AsyncHTTPClient` |
-| primary_key_prefix   | Prefix to use for the primary cache                                | "primary_http"                       |
-| stale_key_prefix     | Prefix to use for the stale cache                                  | "stale_http"                         |
-| ttl                  | `float`, time in seconds to keep the response in the primary cache | 5.0                                  |
-| vary                 | list of headers in which the cache should vary                     | None                                 |
+| Option             | Description                                                        | Default                                            |
+|--------------------|--------------------------------------------------------------------|----------------------------------------------------|
+| cache              | Async `TornadoStrictRedis` instance or compatible                  | `smart_sentinel.tornado_client.TornadoStrictRedis` |
+| client             | Accepts any compatible tornado async http client                   | `tornado.httpclient.AsyncHTTPClient`               |
+| primary_key_prefix | Prefix to use for the primary cache                                | "primary_http"                                     |
+| stale_key_prefix   | Prefix to use for the stale cache                                  | "stale_http"                                       |
+| ttl                | `float`, time in seconds to keep the response in the primary cache | 5.0                                                |
+| vary               | list of headers in which the cache should vary                     | None                                               |
 
 
 # Installing

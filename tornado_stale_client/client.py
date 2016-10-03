@@ -13,10 +13,10 @@ from io import BytesIO
 from urllib.parse import urlencode
 
 import tornado
-from redis import StrictRedis
 from tornado import gen
 from tornado.httpclient import HTTPRequest, HTTPResponse
 from tornado.httputil import HTTPHeaders
+from smart_sentinel.tornado_client import TornadoStrictRedis
 
 
 class StaleHTTPClient(object):
@@ -26,7 +26,7 @@ class StaleHTTPClient(object):
                  stale_key_prefix='stale_http',
                  ttl=5, stale_ttl=None):
 
-        self.cache = cache or StrictRedis()
+        self.cache = cache or TornadoStrictRedis()
         self.client = client or tornado.httpclient.AsyncHTTPClient()
         self.primary_key_prefix = primary_key_prefix
         self.stale_key_prefix = stale_key_prefix

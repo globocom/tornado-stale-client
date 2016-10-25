@@ -19,6 +19,9 @@ from tornado.httputil import HTTPHeaders
 from smart_sentinel.tornado_client import TornadoStrictRedis
 
 
+logger = logging.getLogger(__name__)
+
+
 class StaleHTTPClient(object):
 
     def __init__(self, cache=None, client=None,
@@ -83,7 +86,7 @@ class StaleHTTPClient(object):
         raw_data = yield self.cache.get(key)
         if raw_data is None:
             return None
-        logging.debug('Loaded cache: %s', key)
+        logger.debug('Loaded cache: %s', key)
         response = self.deserialize_response(request, raw_data)
         return response
 
@@ -104,7 +107,7 @@ class StaleHTTPClient(object):
         primary_key = self.get_primary_key(request, vary)
         stale_key = self.get_stale_key(request, vary)
 
-        logging.debug('Caching response: %s', request.url)
+        logger.debug('Caching response: %s', request.url)
 
         serialized_response = self.serialize_response(request, response)
 

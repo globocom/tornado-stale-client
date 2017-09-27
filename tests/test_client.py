@@ -96,6 +96,37 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
         self.assertResponseEqual(cached_response, response)
 
     @gen_test
+    def test_returns_response_from_primary_with_specific_ttl(self):
+        response = self.fake_client.add_response()
+
+        client = StaleHTTPClient(client=self.fake_client, ttl=0.001)
+        response = yield client.fetch('/url', ttl=0.05)
+        yield tornado.gen.sleep(0.002)
+        cached_response = yield client.fetch('/url')
+
+        self.assertIsNot(cached_response, response)
+        self.assertResponseEqual(cached_response, response)
+
+    @gen_test
+    def test_specific_ttl_is_isolated(self):
+        first_expected = self.fake_client.add_response()
+        second_expected = self.fake_client.add_response()
+        another_response = self.fake_client.add_response(body=b'another')
+
+        client = StaleHTTPClient(client=self.fake_client, ttl=1)
+
+        yield [client.fetch('/first', ttl=0.001), client.fetch('/second')]
+
+        yield tornado.gen.sleep(0.005)
+        first_response, second_response = yield [
+            client.fetch('/first'), client.fetch('/second')]
+
+        self.assertIsNot(first_response, first_expected)
+
+        self.assertResponseEqual(first_response, another_response)
+        self.assertResponseEqual(second_response, second_expected)
+
+    @gen_test
     def test_returns_stale_response_after_error(self):
         expected_response = self.fake_client.add_response(body=b'stale')
         error_response = self.fake_client.add_response(body=b'error', code=500)
@@ -103,6 +134,20 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
         client = StaleHTTPClient(client=self.fake_client, ttl=0.001)
 
         yield client.fetch('/url')
+        yield tornado.gen.sleep(0.002)
+        stale_response = yield client.fetch('/url')
+
+        self.assertIsNot(stale_response, error_response)
+        self.assertResponseEqual(stale_response, expected_response)
+
+    @gen_test
+    def test_returns_stale_response_after_error_with_specific_statle_ttl(self):
+        expected_response = self.fake_client.add_response(body=b'stale')
+        error_response = self.fake_client.add_response(body=b'error', code=500)
+
+        client = StaleHTTPClient(client=self.fake_client, ttl=0.001, stale_ttl=0.001)
+
+        yield client.fetch('/url', stale_ttl=0.05)
         yield tornado.gen.sleep(0.002)
         stale_response = yield client.fetch('/url')
 
@@ -124,7 +169,6 @@ class StaleHTTPClientTestCase(AsyncHTTPTestCase):
 
         with self.assertRaises(HTTPError):
             yield client.fetch('/url')
-
 
     @gen_test
     def test_raises_error_after_error_with_empty_cache(self):

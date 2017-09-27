@@ -39,6 +39,8 @@ class StaleHTTPClient(object):
     @gen.coroutine
     def fetch(self, request, vary=None, **kwargs):
         should_raise_error = kwargs.pop('raise_error', True)
+        ttl = kwargs.pop('ttl', self.ttl)
+        stale_ttl = kwargs.pop('stale_ttl', self.stale_ttl)
 
         # Convert to HTTPRequest if fetching a URL
         if not isinstance(request, HTTPRequest):
@@ -55,7 +57,7 @@ class StaleHTTPClient(object):
 
         # Set cache and return on success
         if real_response.error is None:
-            yield self.set_cache(request, vary, real_response)
+            yield self.set_cache(request, vary, real_response, ttl, stale_ttl)
             raise gen.Return(real_response)
 
         # Response failed, try the stale cache
@@ -103,7 +105,7 @@ class StaleHTTPClient(object):
         return result
 
     @gen.coroutine
-    def set_cache(self, request, vary, response):
+    def set_cache(self, request, vary, response, ttl, stale_ttl):
         primary_key = self.get_primary_key(request, vary)
         stale_key = self.get_stale_key(request, vary)
 
@@ -113,9 +115,9 @@ class StaleHTTPClient(object):
 
         pipe = yield self.cache.pipeline()
         with pipe:
-            microseconds = int(self.ttl * 1000)
+            microseconds = int(ttl * 1000)
             pipe.set(primary_key, serialized_response, px=microseconds)
-            microseconds = self.stale_ttl and int(self.stale_ttl * 1000)
+            microseconds = stale_ttl and int(stale_ttl * 1000)
             pipe.set(stale_key, serialized_response, px=microseconds)
             pipe.execute()
 

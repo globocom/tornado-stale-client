@@ -18,6 +18,14 @@ def main():
     print(response.code, 'GET', url, response.body)
 ```
 
+You can also configure `ttl` and `stale_ttl` per request
+
+```python
+    # ...
+    response = yield client.fetch('http://...', ttl=1, stale_ttl=300)
+```
+
+
 Check [example.py](example.py) for a runnable demo.
 
 

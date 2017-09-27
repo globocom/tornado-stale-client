@@ -1,5 +1,8 @@
 # tornado-stale-client
 
+[![Build Status](https://travis-ci.org/globocom/tornado-stale-client.svg?branch=master)](https://travis-ci.org/globocom/tornado-stale-client)
+
+
 An async http client for tornado with stale cache support.
 
 

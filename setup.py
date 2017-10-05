@@ -12,7 +12,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='tornado-stale-client',
-    version='0.2.0',
+    version='0.2.1',
     description='An async http client for tornado with stale cache support',
     long_description='',
     keywords='tornado async http client redis stale cache',
@@ -33,6 +33,6 @@ setup(
     include_package_data=True,
     install_requires=[
         'tornado',
-        'smart-sentinel>=0.2.0',
+        'smart-sentinel>=0.2.1',
     ],
 )
